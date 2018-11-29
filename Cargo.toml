@@ -1,0 +1,7 @@
+[package]
+name = "rustyising"
+version = "0.1.0"
+authors = ["manes <manes.hornung@gmail.com>"]
+
+[dependencies]
+rand = ""

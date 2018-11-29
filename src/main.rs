@@ -7,7 +7,7 @@ mod algorithms;
 fn main() {
     //geometry
 
-    let sizes = vec![40,20];
+    let sizes = vec![160,50];
     //let mut w = World::new(&sizes,1./2.269);
     let mut lat = geometry::Lattice::new(&sizes);
     let mut ising = models::Ising::new(&lat);

@@ -16,6 +16,9 @@ impl Wolf{
         let padd = 1. - (-2.0*beta).exp();
         Wolf{rng:rand::thread_rng(), isdiscovered:isdiscovered, padd:padd}
     }
+    pub fn set_temperature(&mut self, b:f64){
+        self.padd=1. - (-2.0*b).exp();
+    }
 pub fn update(&mut self, m:&mut models::Ising) {
     // select a random starting point
     let r:f64 = self.rng.gen();

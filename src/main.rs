@@ -1,10 +1,108 @@
 use std::env;
 use std::{thread, time};
+use std::io;
 mod geometry;
 mod models;
 mod algorithms;
+extern crate sdl;
+extern crate rand;
+
+//use rand::Rng;
+
+use sdl::video::{SurfaceFlag, VideoFlag};
+use sdl::event::{Event, Key};
 
 fn main() {
+    sdl::init(&[sdl::InitFlag::Video]);
+    sdl::wm::set_caption("rust-sdl demo - video", "rust-sdl");
+
+  //  let mut rng = rand::thread_rng();
+    let scale:isize = 1;
+    let sx:isize =2400;
+    let sy:isize =1200;
+    let screen = match sdl::video::set_video_mode(sx*scale, sy*scale, 32,
+                                                  &[SurfaceFlag::HWSurface],
+                                                  &[VideoFlag::DoubleBuf]) {
+        Ok(screen) => screen,
+        Err(err) => panic!("failed to set video mode: {}", err)
+    };
+
+   let upcolor = sdl::video::Color::RGB(0,0,0); 
+   let downcolor = sdl::video::Color::RGB(250,250,250); 
+   let sizes = vec![sx as i32,sy as i32];
+
+   let mut lat = geometry::Lattice::new(&sizes);
+   let mut ising = models::Ising::new(&lat);
+   let mut alg = algorithms::Wolf::new(&ising,1./2.269185);
+
+    let sleeptime = time::Duration::from_millis(100);
+   println!("press f for fastforeward and t to change the temperature");
+   println!("termalizing ...");
+   for i in 0..200{
+            alg.update(&mut ising);
+        }
+    'main: loop {
+        //update the ising model
+        for i in 0..5{
+            alg.update(&mut ising);
+        }
+        let mut currentcoord = vec![0,0];
+        for i in 0usize..sx as usize {
+            for j in 0usize..sy as usize {
+                currentcoord[0] =i as i32;
+                currentcoord[1] =j as i32;
+                let index = geometry::Lattice::coords2index(&currentcoord, &sizes);
+                let spin = ising.spins[index];
+                let mut ccolor = upcolor;
+                if spin ==-1 {
+                    ccolor =downcolor;
+                }
+                screen.fill_rect(Some(sdl::Rect {
+                    x: (i as i16*scale as i16) as i16 ,
+                    y: (j as i16*scale as i16) as i16,
+                    w: scale as u16,
+                    h: scale  as u16
+                }),ccolor);
+            }
+        }
+        screen.flip();
+        thread::sleep(sleeptime);
+        'event : loop {
+            match sdl::event::poll_event() {
+                Event::Quit => break 'main,
+                Event::None => break 'event,
+                Event::Key(k, _, _, _)
+                    if k == Key::T
+                    => {println!("Enter new inverse Temperature:");
+                        let mut tempnew = String::new();
+                        io::stdin().read_line(&mut tempnew).expect("Failed to read line");
+                        let tempnew: f64 = tempnew.trim().parse().expect("Please type a number!");
+                        alg.set_temperature(tempnew);
+                        break 'event
+                        },
+                Event::Key(k, _, _, _)
+                    if k == Key::F
+                    => {println!("Fast foreward by n steps, enter n:");
+                        let mut n = String::new();
+                        io::stdin().read_line(&mut n).expect("Failed to read line");
+                        let n: i32 = n.trim().parse().expect("Please type a number!");
+                        for i in 0..n{
+                            alg.update(&mut ising);
+                        }
+                        break 'event
+                    },
+                Event::Key(k, _, _, _)
+                    if k == Key::Escape
+                    => {println!("quit...");
+                        break 'main},
+                _ => {}
+            }
+        }
+    }
+    sdl::quit();
+}
+
+fn main2() {
     //geometry
 
     let sizes = vec![160,50];

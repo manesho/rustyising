@@ -5,3 +5,6 @@ authors = ["manes <manes.hornung@gmail.com>"]
 
 [dependencies]
 rand = ""
+
+[dependencies.sdl]
+path = "../../../rust-sdl"
